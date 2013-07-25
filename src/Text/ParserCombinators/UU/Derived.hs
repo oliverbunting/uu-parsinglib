@@ -46,7 +46,15 @@ f <$$> p  =  flip f <$> p
 (<??>) :: IsParser p => p a -> p (a -> a) -> p a
 p <??> q        = must_be_non_empty "<??>" q (p <**> (q `opt` id))
 
+-- | `<.>` functional composition of two parsers
+--
+(<.>) :: IsParser p => p (b -> c) -> p (a -> b) -> p (a -> c)
+f <.> g = (.) <$> f <*> g
 
+-- | `<..>` functional composition of two parsers with the arguments reversed
+--
+(<..>) :: IsParser p => p (a -> b) -> p (b -> c) -> p (a -> c)
+g <..> f = (.) <$> f <*> g
 
 infixl 4  <??>
 
@@ -135,6 +143,7 @@ pChainl    :: IsParser p => p (c -> c -> c) -> p c -> p c
 pChainl   op x    =  must_be_non_empties "pChainl"    op   x (f <$> x <*> pList (flip <$> op <*> x)) 
                     where  f x [] = x
                            f x (func:rest) = f (func x) rest
+
 pChainl_ng :: IsParser p => p (c -> c -> c) -> p c -> p c
 pChainl_ng op x    = must_be_non_empties "pChainl_ng" op   x (f <$> x <*> pList_ng (flip <$> op <*> x))
                      where f x [] = x
